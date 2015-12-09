@@ -12,7 +12,7 @@ class JsJobBuilder {
     String pollScmSchedule = '@daily'
     String tasks
     String junitResults = '**/build/test-results/*.xml'
-    String artifacts = 'dist/'
+    def artifacts = 'dist/'
     List<String> emails
     Boolean use_versions
 
