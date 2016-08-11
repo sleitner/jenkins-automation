@@ -4,9 +4,36 @@ import javaposse.jobdsl.dsl.DslFactory
 import javaposse.jobdsl.dsl.Job
 import jenkins.automation.utils.ScmUtils
 
-class JsJobBuilder {
+/**
+ * @param name          Job name
+ * @param description   Job description
+ * @param pollScmSchedule  Optional Configure Jenkins to poll changes in SCM. Cron style schedule string.
+ * @param artifacts     Optional Closure defaulted to closure below :
+                                  {
+                                     pattern("dist/")
+                                     fingerprint()
+                                     defaultExcludes()
 
+                                     }
+
+ * @param emails  List or String of notification email addresses
+ * @param node_version  Version of nodeJs installation to use. Relies on nodejs plugin and corresponds to the installation
+ *                      defined in Jenkins.
+ * @param repos List of repos to watch
+ * @param use_versions flag to check out the repo at a specific tag. Applies only to MultiScm block.
+ *          The tag is parsed out from url property appended after '@' sign.
+
+ * <p>
+ *
+ * @see <a href="https://github.com/imuchnik/jenkins-automation/blob/gh-pages/docs/examples.md#js-job-builder"
+ *      target="_blank">JS job builder example</a>
+
+ * </p>
+ */
+
+class JsJobBuilder {
     String name
+    String node_version="5.5.0"
     String description
     String gitBranch = 'master'
     String pollScmSchedule = '@daily'
@@ -17,7 +44,7 @@ class JsJobBuilder {
         fingerprint()
         defaultExcludes()
     }
-    List<String> emails
+    def emails
     Boolean use_versions
 
     def repos = [];
@@ -33,25 +60,18 @@ class JsJobBuilder {
 
         baseJob.with {
             wrappers {
-                nodejs('Node 0.12')// pass in the version?
+                nodejs(node_version)
             }
 
             multiscm {
                 ScmUtils.project_repos(delegate, this.repos, use_versions)
             }
 
-            triggers {
-                scm pollScmSchedule
+            if (pollScmSchedule) {
+                triggers {
+                    scm pollScmSchedule
+                }
             }
-
-//            steps {
-//                shell( // TODO:we can potentially pass those in as well - $DIR_TO_BUILD and build script name
-//                        '''
-//                            cd $DIR_TO_BUILD
-//                             ./frontendbuild.sh
-//                        '''
-//                )
-//            }
 
             if (artifacts) {
                 publishers {
